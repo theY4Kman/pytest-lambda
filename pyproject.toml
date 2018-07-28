@@ -1,0 +1,27 @@
+[build-system]
+requires = ['flit']
+build-backend = 'flit.buildapi'
+
+
+[tool.flit.metadata]
+dist-name = 'pytest-lambda'
+module = 'pytest_lambda'
+author = 'Zach "theY4Kman" Kanzler'
+author-email = 'they4kman@gmail.com'
+home-page = 'https://github.com/theY4Kman/pytest-lambda'
+
+requires=['pytest>=3.6.0']
+requires-python='>=3.6'
+
+description-file='README.md'
+classifiers=[
+    'Development Status :: 3 - Alpha',
+    'Programming Language :: Python',
+    'Framework :: Pytest',
+    'License :: OSI Approved :: MIT License',
+    'Topic :: Software Development :: Testing',
+]
+
+
+[tool.flit.entrypoints."pytest11"]
+markdown = "pytest_lambda.plugin"

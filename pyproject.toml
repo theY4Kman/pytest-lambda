@@ -24,4 +24,4 @@ classifiers=[
 
 
 [tool.flit.entrypoints."pytest11"]
-markdown = "pytest_lambda.plugin"
+lambda = "pytest_lambda.plugin"

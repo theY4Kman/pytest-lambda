@@ -1,0 +1,1 @@
+pytest-markdown>=0.0.6

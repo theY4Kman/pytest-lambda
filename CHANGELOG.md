@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 
 ## [Unreleased]
+
+
+## [0.0.2] — 2018-07-29
 ### Added
  - Allow conditional raising of exceptions with `error_fixture`
 

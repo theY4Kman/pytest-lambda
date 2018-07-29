@@ -47,7 +47,9 @@ def static_fixture(value: Any, **fixture_kwargs):
 
 RAISE_EXCEPTION_FIXTURE_FUNCTION_FORMAT = '''
 def raise_exception({args}):
-    raise error_fn({kwargs})
+    exc = error_fn({kwargs})
+    if exc is not None:
+        raise exc
 '''
 
 

@@ -41,7 +41,7 @@ fixture_name = pytest.lambda_fixture('other_fixture', 'another_fixture', 'cant_b
 
 # Reference `self` inside a class
 class TestContext:
-    fixture_name = pytest.lambda_fixture(lambda self: self.__class__.name, bind=True)
+    fixture_name = pytest.lambda_fixture(lambda self: self.__class__.__name__, bind=True)
 
 # Parametrize
 fixture_name = pytest.lambda_fixture(lambda request: request.param, params=['a', 'b'], ids=['A!', 'B!'])

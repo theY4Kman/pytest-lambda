@@ -194,13 +194,17 @@ def it_does_sweet_jumps(bicycle):
 
 
 class ContextOcean:
-    depth = pytest.static_fixture('20,000 leagues')
+    depth = pytest.not_implemented_fixture()
     bicycle = pytest.error_fixture(lambda bicycle, depth: (
         RuntimeError(f'Now is not the time to use that! ({bicycle})') if depth > '1 league' else None))
 
-    @pytest.mark.xfail(strict=True, raises=RuntimeError)
-    def it_doesnt_flip_and_shit(self, bicycle):
-        assert bicycle + 'floats'
+
+    class ContextDeep:
+        depth = pytest.static_fixture('20,000 leagues')
+
+        @pytest.mark.xfail(strict=True, raises=RuntimeError)
+        def it_doesnt_flip_and_shit(self, bicycle):
+            assert bicycle + 'floats'
 
 
     class ContextBeach:

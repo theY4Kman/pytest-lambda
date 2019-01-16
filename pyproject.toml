@@ -10,7 +10,7 @@ author = 'Zach "theY4Kman" Kanzler'
 author-email = 'they4kman@gmail.com'
 home-page = 'https://github.com/theY4Kman/pytest-lambda'
 
-requires=['pytest>=3.6.0']
+requires=['pytest>=3.6.0', 'wrapt~=1.11.0']
 requires-python='>=3.6'
 
 description-file='README.md'

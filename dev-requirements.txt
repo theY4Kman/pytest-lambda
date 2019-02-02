@@ -1,3 +1,5 @@
 flit>=0.12,<2.0
 pytest>=3.6.0,<4.0.0
 pytest-markdown>=0.0.6,<0.1.0
+CommonMark~=0.7.5
+wrapt~=1.11.0

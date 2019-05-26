@@ -1,19 +1,19 @@
-[build-system]
-requires = ['flit']
-build-backend = 'flit.buildapi'
+[tool.poetry]
+name = 'pytest-lambda'
+version = "0.1.0"
+description = 'Define pytest fixtures with lambda functions.'
+license = 'MIT'
 
+authors = [
+    'Zach "theY4Kman" Kanzler <they4kman@gmail.com>'
+]
 
-[tool.flit.metadata]
-dist-name = 'pytest-lambda'
-module = 'pytest_lambda'
-author = 'Zach "theY4Kman" Kanzler'
-author-email = 'they4kman@gmail.com'
-home-page = 'https://github.com/theY4Kman/pytest-lambda'
+readme = 'README.md'
 
-requires=['pytest>=3.6.0', 'wrapt~=1.11.0']
-requires-python='>=3.6'
+repository = 'https://github.com/theY4Kman/pytest-lambda'
+homepage = 'https://github.com/theY4Kman/pytest-lambda'
 
-description-file='README.md'
+keywords = ['pytest']
 classifiers=[
     'Development Status :: 3 - Alpha',
     'Programming Language :: Python',
@@ -23,5 +23,24 @@ classifiers=[
 ]
 
 
-[tool.flit.entrypoints."pytest11"]
+[tool.poetry.dependencies]
+# Typing annotations are used
+# XXX: for whatever reason, poetry doesn't like `>=3.6` — the additional pin allows locking to work
+python = '^3.6, >= 3.6'
+
+pytest = '>=3.6, <4.6'
+wrapt = '^1.11.0'
+
+
+[tool.poetry.dev-dependencies]
+tox = "^3.12"
+pytest-markdown = "^0.0.7"
+
+
+[tool.poetry.plugins."pytest11"]
 lambda = "pytest_lambda.plugin"
+
+
+[build-system]
+requires = ['poetry>=0.12']
+build-backend = 'poetry.masonry.api'

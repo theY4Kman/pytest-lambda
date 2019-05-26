@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 
 ## [Unreleased]
+### Removed
+ - Removed injection of pytest-lambda attrs into the `pytest` namespace
 
 
 ## [0.1.0] — 2019-02-02

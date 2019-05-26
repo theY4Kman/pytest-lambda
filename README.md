@@ -12,14 +12,14 @@ pip install pytest-lambda
 ```python
 # test_the_namerator.py
 
-import pytest
+from pytest_lambda import lambda_fixture, static_fixture
 
-first = pytest.static_fixture('John')
-middle = pytest.static_fixture('Jacob')
-last = pytest.static_fixture('Jingleheimer-Schmidt')
+first = static_fixture('John')
+middle = static_fixture('Jacob')
+last = static_fixture('Jingleheimer-Schmidt')
 
 
-full_name = pytest.lambda_fixture(lambda first, middle, last: f'{first} {middle} {last}')
+full_name = lambda_fixture(lambda first, middle, last: f'{first} {middle} {last}')
 
 
 def test_the_namerator(full_name):
@@ -31,40 +31,47 @@ def test_the_namerator(full_name):
 
  ```python
 import pytest
+from pytest_lambda import (
+    disabled_fixture,
+    error_fixture,
+    lambda_fixture,
+    not_implemented_fixture,
+    static_fixture,
+)
 
 # Basic usage
-fixture_name = pytest.lambda_fixture(lambda other_fixture: 'expression', scope='session', autouse=True)
+fixture_name = lambda_fixture(lambda other_fixture: 'expression', scope='session', autouse=True)
 
 # Request fixtures by name
-fixture_name = pytest.lambda_fixture('other_fixture')
-fixture_name = pytest.lambda_fixture('other_fixture', 'another_fixture', 'cant_believe_its_not_fixture')
+fixture_name = lambda_fixture('other_fixture')
+fixture_name = lambda_fixture('other_fixture', 'another_fixture', 'cant_believe_its_not_fixture')
 
 # Reference `self` inside a class
 class TestContext:
-    fixture_name = pytest.lambda_fixture(lambda self: self.__class__.__name__, bind=True)
+    fixture_name = lambda_fixture(lambda self: self.__class__.__name__, bind=True)
 
 # Parametrize
-fixture_name = pytest.lambda_fixture(lambda request: request.param, params=['a', 'b'], ids=['A!', 'B!'])
-fixture_name = pytest.lambda_fixture(lambda request: request.param, 
-                                      params=[pytest.param('a', id='A!'), 
-                                              pytest.param('b', id='B!')])
+fixture_name = lambda_fixture(lambda request: request.param, params=['a', 'b'], ids=['A!', 'B!'])
+fixture_name = lambda_fixture(lambda request: request.param, 
+                              params=[pytest.param('a', id='A!'), 
+                                      pytest.param('b', id='B!')])
 
 # Use literal value (not lazily evaluated)
-fixture_name = pytest.static_fixture(42)
-fixture_name = pytest.static_fixture('just six sevens', autouse=True, scope='module')
+fixture_name = static_fixture(42)
+fixture_name = static_fixture('just six sevens', autouse=True, scope='module')
 
 # Raise an exception if fixture is requested
-fixture_name = pytest.error_fixture(lambda: ValueError('my life has no intrinsic value'))
+fixture_name = error_fixture(lambda: ValueError('my life has no intrinsic value'))
 
 # Or maybe don't raise the exception
-fixture_name = pytest.error_fixture(lambda other_fixture: TypeError('nope') if other_fixture else None)
+fixture_name = error_fixture(lambda other_fixture: TypeError('nope') if other_fixture else None)
 
 # Create an abstract fixture (to be overridden by the user)
-fixture_name = pytest.not_implemented_fixture()
-fixture_name = pytest.not_implemented_fixture(autouse=True, scope='session')
+fixture_name = not_implemented_fixture()
+fixture_name = not_implemented_fixture(autouse=True, scope='session')
 
 # Disable usage of a fixture (fail early to save future head scratching)
-fixture_name = pytest.disabled_fixture()
+fixture_name = disabled_fixture()
 ```
 
 
@@ -74,10 +81,10 @@ Of course, you can use lambda fixtures inside test classes:
 ```python
 # test_staying_classy.py
 
-import pytest
+from pytest_lambda import lambda_fixture
 
 class TestClassiness:
-    classiness = pytest.lambda_fixture(lambda: 9000 + 1)
+    classiness = lambda_fixture(lambda: 9000 + 1)
 
     def test_how_classy_we_is(self, classiness):
         assert classiness == 9001
@@ -90,10 +97,10 @@ You can also pass the name of another fixture, instead of a lambda:
 ```python
 # test_the_bourne_identity.py
 
-import pytest
+from pytest_lambda import lambda_fixture, static_fixture
 
-agent = pytest.static_fixture('Bourne')
-who_i_am = pytest.lambda_fixture('agent')
+agent = static_fixture('Bourne')
+who_i_am = lambda_fixture('agent')
 
 def test_my_identity(who_i_am):
     assert who_i_am == 'Bourne'
@@ -104,11 +111,11 @@ Even multiple fixture names can be used:
 ```python
 # test_the_bourne_identity.py
 
-import pytest
+from pytest_lambda import lambda_fixture, static_fixture
 
-agent_first = pytest.static_fixture('Jason')
-agent_last = pytest.static_fixture('Bourne')
-who_i_am = pytest.lambda_fixture('agent_first', 'agent_last')
+agent_first = static_fixture('Jason')
+agent_last = static_fixture('Bourne')
+who_i_am = lambda_fixture('agent_first', 'agent_last')
 
 def test_my_identity(who_i_am):
     assert who_i_am == ('Jason', 'Bourne')
@@ -121,15 +128,15 @@ You can force the loading of fixtures without trying to remember the name of `py
 ```python
 # test_garage.py
 
-import pytest
+from pytest_lambda import lambda_fixture, static_fixture
 
-car = pytest.static_fixture({
+car = static_fixture({
     'type': 'Sweet-ass Cadillac',
     'is_started': False,
 })
-turn_the_key = pytest.lambda_fixture(lambda car: car.update(is_started=True))
+turn_the_key = lambda_fixture(lambda car: car.update(is_started=True))
 
-preconditions = pytest.lambda_fixture('turn_the_key', autouse=True)
+preconditions = lambda_fixture('turn_the_key', autouse=True)
 
 def test_my_caddy(car):
     assert car['is_started']
@@ -143,10 +150,11 @@ def test_my_caddy(car):
 # test_mixinalot.py
 
 import pytest
+from pytest_lambda import static_fixture, not_implemented_fixture
 
 class Dials1900MixinALot:
-    butt_shape = pytest.not_implemented_fixture()
-    desires = pytest.not_implemented_fixture()
+    butt_shape = not_implemented_fixture()
+    desires = not_implemented_fixture()
 
     def it_kicks_them_nasty_thoughts(self, butt_shape, desires):
         assert butt_shape == 'round' and 'triple X throw down' in desires
@@ -154,14 +162,13 @@ class Dials1900MixinALot:
 
 @pytest.mark.xfail
 class DescribeMissThing(Dials1900MixinALot):
-    butt_shape = pytest.static_fixture('flat')
-    desires = pytest.static_fixture(['playin workout tapes by Fonda'])
+    butt_shape = static_fixture('flat')
+    desires = static_fixture(['playin workout tapes by Fonda'])
 
 
 class DescribeSistaICantResista(Dials1900MixinALot):
-    butt_shape = pytest.static_fixture('round')
-    desires = pytest.static_fixture(['gettin in yo Benz',
-                                     'triple X throw down'])
+    butt_shape = static_fixture('round')
+    desires = static_fixture(['gettin in yo Benz', 'triple X throw down'])
 ```
 
 
@@ -170,8 +177,9 @@ Use `disabled_fixture` to mark a fixture as disabled. Go figure.
 # test_ada.py
 
 import pytest
+from pytest_lambda import disabled_fixture
 
-wheelchair = pytest.disabled_fixture()
+wheelchair = disabled_fixture()
 
 @pytest.mark.xfail(strict=True)
 def test_stairs(wheelchair):
@@ -186,21 +194,22 @@ You can also raise an arbitrary exception when a fixture is requested, using `er
 # test_bikeshed.py
 
 import pytest
+from pytest_lambda import error_fixture, not_implemented_fixture, static_fixture
 
-bicycle = pytest.static_fixture('a sledgehammer')
+bicycle = static_fixture('a sledgehammer')
 
 def it_does_sweet_jumps(bicycle):
     assert bicycle + 'jump' >= '3 feet'
 
 
 class ContextOcean:
-    depth = pytest.not_implemented_fixture()
-    bicycle = pytest.error_fixture(lambda bicycle, depth: (
+    depth = not_implemented_fixture()
+    bicycle = error_fixture(lambda bicycle, depth: (
         RuntimeError(f'Now is not the time to use that! ({bicycle})') if depth > '1 league' else None))
 
 
     class ContextDeep:
-        depth = pytest.static_fixture('20,000 leagues')
+        depth = static_fixture('20,000 leagues')
 
         @pytest.mark.xfail(strict=True, raises=RuntimeError)
         def it_doesnt_flip_and_shit(self, bicycle):
@@ -208,7 +217,7 @@ class ContextOcean:
 
 
     class ContextBeach:
-        depth = pytest.static_fixture('1 inch')
+        depth = static_fixture('1 inch')
 
         def it_gets_you_all_wet_but_otherwise_rides_like_a_champ(self, bicycle):
             assert 'im wet'
@@ -220,6 +229,6 @@ class ContextOcean:
 How can I build and test the thing locally?
 
 1. Create a virtualenv, however you prefer. Or don't, if you prefer.
-2. `pip install -r dev-requirements.txt`
-3. `flit install -s` to install setuptools entrypoint, so pytest automatically loads the plugin (otherwise, you'll have to run `py.test -p pytest_lambda.plugin`)
+2. `pip install poetry`
+3. `poetry install` to install setuptools entrypoint, so pytest automatically loads the plugin (otherwise, you'll have to run `py.test -p pytest_lambda.plugin`)
 4. Run `py.test`. The tests will be collected from the README.md (thanks to [pytest-markdown](https://github.com/Jc2k/pytest-markdown)).

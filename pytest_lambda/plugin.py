@@ -1,24 +1,9 @@
 import inspect
 from typing import List, Tuple
 
-import pytest
 from _pytest.python import Module
 
 from pytest_lambda.impl import LambdaFixture
-
-
-def get_attrs_to_expose_under_pytest() -> dict:
-    """Attributes which should be accessible from the root pytest namespace"""
-    import pytest_lambda
-    return vars(pytest_lambda)
-
-
-def pytest_addhooks(pluginmanager):
-    # No hooks added, but we do monkeypatch the pytest module namespace to
-    # expose our goods, a la pytest_namespace — but with less deprecation warnings.
-
-    for name, val in get_attrs_to_expose_under_pytest().items():
-        setattr(pytest, name, val)
 
 
 def pytest_collectstart(collector):

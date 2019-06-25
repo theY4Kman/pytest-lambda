@@ -51,9 +51,9 @@ class TestContext:
     fixture_name = lambda_fixture(lambda self: self.__class__.__name__, bind=True)
 
 # Parametrize
-fixture_name = lambda_fixture(lambda request: request.param, params=['a', 'b'], ids=['A!', 'B!'])
-fixture_name = lambda_fixture(lambda request: request.param, 
-                              params=[pytest.param('a', id='A!'), 
+fixture_name = lambda_fixture(params=['a', 'b'])
+fixture_name = lambda_fixture(params=['a', 'b'], ids=['A!', 'B!'])
+fixture_name = lambda_fixture(params=[pytest.param('a', id='A!'),
                                       pytest.param('b', id='B!')])
 
 # Use literal value (not lazily evaluated)

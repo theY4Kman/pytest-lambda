@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 
 ## [Unreleased]
+### Added
+ - Introduced `wrap_fixture` utility to extend fixtures while currying method signatures to feed pytest's dependency graph
 
 
 ## [1.0.0] — 2019-05-26

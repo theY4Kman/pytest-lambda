@@ -28,7 +28,7 @@ classifiers=[
 # XXX: for whatever reason, poetry doesn't like `>=3.6` — the additional pin allows locking to work
 python = '^3.6, >= 3.6'
 
-pytest = '>=3.6, <4.6'
+pytest = '>=3.6, <6.1'
 wrapt = '^1.11.0'
 
 

@@ -62,6 +62,19 @@ class DescribeWrapFixture:
         assert expected == actual
 
 
+    def it_allows_calling_wrapped_fixture_with_ignored_args(self, request):
+        def fixture(message):
+            return message
+
+        @wrap_fixture(fixture, ignore='message')
+        def extended_fixture(wrapped):
+            return wrapped(message='overridden message')
+
+        expected = 'overridden message'
+        actual = extended_fixture(request=request)
+        assert expected == actual
+
+
     def it_passes_extension_args_to_extension(self, request):
         def fixture(*args, **kwargs):
             pass

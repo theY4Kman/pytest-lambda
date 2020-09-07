@@ -1,5 +1,5 @@
 import functools
-from typing import Callable, Iterable
+from typing import Callable, Iterable, Union
 
 from _pytest.compat import getfuncargnames, get_real_func
 from _pytest.fixtures import call_fixture_func
@@ -7,7 +7,11 @@ from _pytest.fixtures import call_fixture_func
 __all__ = ['wrap_fixture']
 
 
-def wrap_fixture(fixturefunc: Callable, wrapped_param: str = 'wrapped') -> Callable[[Callable], Callable]:
+def wrap_fixture(
+    fixturefunc: Callable,
+    wrapped_param: str = 'wrapped',
+    ignore: Union[str, Iterable[str]] = (),
+) -> Callable[[Callable], Callable]:
     """Wrap a fixture function, extending its argspec w/ the decorated method
 
     pytest will prune the fixture dependency graph of any unneeded fixtures. It
@@ -39,9 +43,20 @@ def wrap_fixture(fixturefunc: Callable, wrapped_param: str = 'wrapped') -> Calla
             team.add_member(user, role_id=TeamRole.Roles.ADMIN)
             return user
 
-    :param fixturefunc: The fixture function to wrap
-    :param wrapped_param: Name of parameter to pass the wrapped fixturefunc as
+    :param fixturefunc:
+        The fixture function to wrap
+
+    :param wrapped_param:
+        Name of parameter to pass the wrapped fixturefunc as
+
+    :param ignore:
+        Name of parameter(s) from fixturefunc to not include in wrapping
+        fixture's args (and thus not request as fixtures from pytest)
+
     """
+
+    if isinstance(ignore, str):
+        ignore = (ignore,)
 
     fixturefunc = get_real_func(fixturefunc)
 
@@ -55,7 +70,7 @@ def wrap_fixture(fixturefunc: Callable, wrapped_param: str = 'wrapped') -> Calla
         # Don't include the wrapped param in the argspec we expose to pytest
         decorated_arg_names -= {wrapped_param}
 
-        fixture_arg_names = set(getfuncargnames(fixturefunc))
+        fixture_arg_names = set(getfuncargnames(fixturefunc)) - set(ignore)
         all_arg_names = fixture_arg_names | decorated_arg_names | {'request'}
 
         def extension_impl(**all_args):

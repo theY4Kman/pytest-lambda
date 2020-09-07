@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 
 ## [Unreleased]
+### Added
+ - Allow certain arguments of wrapped fixture to be ignored w/ @wrap_fixture
 
 
 ## [1.1.1] — 2020-08-01

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = 'pytest-lambda'
-version = "1.2.1"
+version = "1.2.2"
 description = 'Define pytest fixtures with lambda functions.'
 license = 'MIT'
 

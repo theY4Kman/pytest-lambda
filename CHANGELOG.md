@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 
 ## [Unreleased]
+### Fixed
+ - Resolve error in `py.test --fixtures` when using `error_fixture`, `not_implemented_fixture`, or `disabled_fixture`
 
 
 ## [1.2.1] — 2020-11-02

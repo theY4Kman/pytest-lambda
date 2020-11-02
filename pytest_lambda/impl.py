@@ -120,7 +120,8 @@ class LambdaFixture(wrapt.ObjectProxy):
             self.set_fixture_func(name)
 
         self.__name__ = name
-        self.__module__ = parent.__module__ if is_in_class else parent.__name__
+        self.__module__ = self.fixture_func.__module__ = (
+            parent.__module__ if is_in_class else parent.__name__)
         self.parent = parent
 
     # These properties are required in order to expose attributes stored on the

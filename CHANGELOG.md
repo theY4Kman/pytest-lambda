@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 
 ## [Unreleased]
+
+
+## [1.2.3] — 2020-11-02
 ### Fixed
  - Resolve error in `py.test --fixtures` due to `__module__` not properly being curried to fixture func
 

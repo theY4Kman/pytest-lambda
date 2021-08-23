@@ -124,6 +124,34 @@ class LambdaFixture(wrapt.ObjectProxy):
             parent.__module__ if is_in_class else parent.__name__)
         self.parent = parent
 
+    # With --doctest-modules enabled, the doctest finder will enumerate all objects
+    # in all relevant modules, and use `isinstance(obj, ...)` to determine whether
+    # the object has doctests to collect. Under the hood, isinstance retrieves the
+    # value of the `obj.__class__` attribute.
+    #
+    # When using implicit referential lambda fixtures (e.g. `name = lambda_fixture()`),
+    # the LambdaFixture object doesn't initialize its underlying object proxy until the
+    # pytest collection phase. Unfortunately, doctest's scanning occurs before this.
+    # When doctest attempts `isinstance(lfix, ...)` on an implicit referential
+    # lambda fixture and accesses `__class__`, the object proxy tries to curry
+    # the access to its wrapped object — but there isn't one, so it raises an error.
+    #
+    # To address this, we override __class__ to return LambdaFixture when the
+    # object proxy has not yet been initialized.
+
+    @property
+    def __class__(self):
+        try:
+            self.__wrapped__
+        except ValueError:
+            return LambdaFixture
+        else:
+            return self.__wrapped__.__class__
+
+    @__class__.setter
+    def __class__(self, val):
+        self.__wrapped__.__class__ = val
+
     # These properties are required in order to expose attributes stored on the
     # LambdaFixture proxying instance without prefixing them with _self_
 

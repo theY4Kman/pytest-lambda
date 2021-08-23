@@ -38,3 +38,12 @@ def it_processes_toplevel_tuple_lambda_fixture(abc):
     expected = ('a', 'b', 'c')
     actual = abc
     assert expected == actual
+
+
+class TestClass:
+    a = lambda_fixture()
+
+    def it_processes_implicit_reference_fixture(self, a):
+        expected = 'a'
+        actual = a
+        assert expected == actual

@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 
 ## [Unreleased]
+
+
+## [1.2.5] — 2021-08-23
 ### Fixed
  - Avoid `ValueError: wrapper has not been initialized` when using implicit referential lambda fixtures (e.g. `name = lambda_fixture()`) in combination with `py.test --doctest-modules`
 

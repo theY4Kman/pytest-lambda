@@ -26,7 +26,7 @@ classifiers=[
 [tool.poetry.dependencies]
 # Typing annotations are used
 # XXX: for whatever reason, poetry doesn't like `>=3.6` — the additional pin allows locking to work
-python = '^3.6, >= 3.6'
+python = '^3.6.1, >= 3.6.1'
 
 pytest = '>=3.6, <7'
 wrapt = '^1.11.0'
@@ -34,7 +34,7 @@ wrapt = '^1.11.0'
 
 [tool.poetry.dev-dependencies]
 tox = "^3.12"
-pytest-markdown = "^0.0.7"
+pytest-markdown = "^1.0.2"
 
 
 [tool.poetry.plugins."pytest11"]

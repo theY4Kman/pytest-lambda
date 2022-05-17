@@ -10,7 +10,7 @@ __all__ = ['lambda_fixture', 'static_fixture', 'error_fixture',
 
 def lambda_fixture(fixture_name_or_lambda: Union[str, Callable]=None,
                    *other_fixture_names: Iterable[str],
-                   bind=False,
+                   bind: bool = False, async_: bool = False,
                    scope="function", params=None, autouse=False, ids=None, name=None):
     """Use a fixture name or lambda function to compactly declare a fixture
 
@@ -29,14 +29,20 @@ def lambda_fixture(fixture_name_or_lambda: Union[str, Callable]=None,
         first parameter in your fixture. This cannot be true if using a fixture
         name.
 
+    :param async_: If True, the lambda will be wrapped in an async function; if the
+        lambda evaluates to an awaitable value, it will be awaited.
+
     """
     if other_fixture_names:
         fixture_names_or_lambda = (fixture_name_or_lambda,) + other_fixture_names
     else:
         fixture_names_or_lambda = fixture_name_or_lambda
 
-    return LambdaFixture(fixture_names_or_lambda, bind=bind, scope=scope,
-                         params=params, autouse=autouse, ids=ids, name=name)
+    return LambdaFixture(
+        fixture_names_or_lambda,
+        bind=bind, async_=async_,
+        scope=scope, params=params, autouse=autouse, ids=ids, name=name,
+    )
 
 
 def static_fixture(value: Any, **fixture_kwargs):

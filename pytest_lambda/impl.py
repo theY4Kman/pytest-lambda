@@ -1,9 +1,12 @@
 import functools
+import inspect
 from types import ModuleType
 from typing import Callable, Union
 
 import pytest
 import wrapt
+
+from .compat import _PytestWrapper
 
 _IDENTITY_LAMBDA_FORMAT = '''
 {name} = lambda {argnames}: ({argnames})
@@ -30,8 +33,11 @@ class LambdaFixture(wrapt.ObjectProxy):
     has_fixture_func: bool
     parent: Union[type, ModuleType]
 
-    def __init__(self, fixture_names_or_lambda, bind=False, **fixture_kwargs):
+    def __init__(
+        self, fixture_names_or_lambda, *, bind: bool = False, async_: bool, **fixture_kwargs
+    ):
         self.bind = bind
+        self.is_async = async_
         self.fixture_kwargs = fixture_kwargs
         self.fixture_func = self._not_implemented
         self.has_fixture_func = False
@@ -39,6 +45,10 @@ class LambdaFixture(wrapt.ObjectProxy):
 
         #: pytest fixture info definition
         self._pytestfixturefunction = pytest.fixture(**fixture_kwargs)
+
+        # Instruct pytest not to unwrap our fixture down to its original lambda, but
+        # instead treat the LambdaFixture as the fixture function.
+        self.__pytest_wrapped__ = _PytestWrapper(self)
 
         if fixture_names_or_lambda is not None:
             self.set_fixture_func(fixture_names_or_lambda)
@@ -74,9 +84,18 @@ class LambdaFixture(wrapt.ObjectProxy):
             # of overwriting functions unrelated to the fixture. (A lambda need
             # not be used – a method imported from another module can be used.)
 
-            @functools.wraps(real_fixture_func)
-            def insulator(*args, **kwargs):
-                return real_fixture_func(*args, **kwargs)
+            if self.is_async:
+                @functools.wraps(real_fixture_func)
+                async def insulator(*args, **kwargs):
+                    val = real_fixture_func(*args, **kwargs)
+                    if inspect.isawaitable(val):
+                        val = await val
+                    return val
+
+            else:
+                @functools.wraps(real_fixture_func)
+                def insulator(*args, **kwargs):
+                    return real_fixture_func(*args, **kwargs)
 
             return insulator
 
@@ -119,7 +138,7 @@ class LambdaFixture(wrapt.ObjectProxy):
             #    do_the_thing = lambda_fixture(autouse=True)
             self.set_fixture_func(name)
 
-        self.__name__ = name
+        self.__name__ = self.fixture_func.__name__ = name
         self.__module__ = self.fixture_func.__module__ = (
             parent.__module__ if is_in_class else parent.__name__)
         self.parent = parent
@@ -156,49 +175,41 @@ class LambdaFixture(wrapt.ObjectProxy):
     # LambdaFixture proxying instance without prefixing them with _self_
 
     @property
-    def bind(self):
-        return self._self_bind
-
+    def bind(self): return self._self_bind
     @bind.setter
-    def bind(self, value):
-        self._self_bind = value
+    def bind(self, value): self._self_bind = value
 
     @property
-    def fixture_kwargs(self):
-        return self._self_fixture_kwargs
+    def is_async(self): return self._self_is_async
+    @is_async.setter
+    def is_async(self, value): self._self_is_async = value
 
+    @property
+    def fixture_kwargs(self): return self._self_fixture_kwargs
     @fixture_kwargs.setter
-    def fixture_kwargs(self, value):
-        self._self_fixture_kwargs = value
+    def fixture_kwargs(self, value): self._self_fixture_kwargs = value
 
     @property
-    def fixture_func(self):
-        return self._self_fixture_func
-
+    def fixture_func(self): return self._self_fixture_func
     @fixture_func.setter
-    def fixture_func(self, value):
-        self._self_fixture_func = value
+    def fixture_func(self, value): self._self_fixture_func = value
 
     @property
-    def has_fixture_func(self):
-        return self._self_has_fixture_func
-
+    def has_fixture_func(self): return self._self_has_fixture_func
     @has_fixture_func.setter
-    def has_fixture_func(self, value):
-        self._self_has_fixture_func = value
+    def has_fixture_func(self, value): self._self_has_fixture_func = value
 
     @property
-    def parent(self):
-        return self._self_parent
-
+    def parent(self): return self._self_parent
     @parent.setter
-    def parent(self, value):
-        self._self_parent = value
+    def parent(self, value): self._self_parent = value
 
     @property
-    def _pytestfixturefunction(self):
-        return self._self__pytestfixturefunction
-
+    def _pytestfixturefunction(self): return self._self__pytestfixturefunction
     @_pytestfixturefunction.setter
-    def _pytestfixturefunction(self, value):
-        self._self__pytestfixturefunction = value
+    def _pytestfixturefunction(self, value): self._self__pytestfixturefunction = value
+
+    @property
+    def __pytest_wrapped__(self): return self._self___pytest_wrapped__
+    @__pytest_wrapped__.setter
+    def __pytest_wrapped__(self, value): self._self___pytest_wrapped__ = value

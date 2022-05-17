@@ -30,6 +30,7 @@ def test_the_namerator(full_name):
 # Cheatsheet
 
  ```python
+import asyncio
 import pytest
 from pytest_lambda import (
     disabled_fixture,
@@ -41,6 +42,9 @@ from pytest_lambda import (
 
 # Basic usage
 fixture_name = lambda_fixture(lambda other_fixture: 'expression', scope='session', autouse=True)
+
+# Async fixtures (awaitables automatically awaited) — requires an async plugin, like pytest-asyncio
+fixture_name = lambda_fixture(lambda: asyncio.sleep(0, 'expression'), async_=True)
 
 # Request fixtures by name
 fixture_name = lambda_fixture('other_fixture')
@@ -221,6 +225,32 @@ class ContextOcean:
 
         def it_gets_you_all_wet_but_otherwise_rides_like_a_champ(self, bicycle):
             assert 'im wet'
+```
+
+
+### Async fixtures
+
+By passing `async_=True` to `lambda_fixture`, the fixture will be defined as an async function, and if the returned value is awaitable, it will be automatically awaited before exposing it to pytest. This allows the usage of async things while only being slightly salty that Python, TO THIS DAY, still does not support `await` expressions within lambdas! Yes, only slightly salty!
+
+NOTE: an asyncio pytest plugin is required to use async fixtures, such as [pytest-asyncio](https://github.com/pytest-dev/pytest-asyncio)
+
+```python
+# test_a_sink.py
+
+import asyncio
+import pytest
+from pytest_lambda import lambda_fixture
+
+async def hows_the_sink():
+    await asyncio.sleep(1)
+    return 'leaky'
+
+a_sink = lambda_fixture(lambda: hows_the_sink(), async_=True)
+
+class DescribeASink:
+    @pytest.mark.asyncio
+    async def it_is_leaky(self, a_sink):
+        assert a_sink is 'leaky'
 ```
 
 

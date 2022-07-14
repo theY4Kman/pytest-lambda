@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 
 ## [Unreleased]
+### Added
+ - Add support for destructuring referential tuple lambda fixtures (e.g. `x, y, z = lambda_fixture('a', 'b', 'c')`)
+ - Add support for destructuring parametrized lambda fixtures (e.g. `a, b, c = lambda_fixture(params=[pytest.param('ayy', 'bee', 'see')])`)
 
 
 ## [1.3.0] — 2022-05-17

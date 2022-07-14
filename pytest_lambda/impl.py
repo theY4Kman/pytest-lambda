@@ -1,20 +1,41 @@
 import functools
 import inspect
 from types import ModuleType
-from typing import Callable, Union
+from typing import Any, Callable, List, Optional, Tuple, Union
 
 import pytest
 import wrapt
+from _pytest.mark import ParameterSet
 
 from .compat import _PytestWrapper
+
+try:
+    from collections.abc import Iterable, Sized
+except ImportError:
+    from collections import Iterable, Sized
 
 _IDENTITY_LAMBDA_FORMAT = '''
 {name} = lambda {argnames}: ({argnames})
 '''
 
+_DESTRUCTURED_PARAMETRIZED_LAMBDA_FORMAT = '''
+{name} = lambda {source_name}: {source_name}[{index}]
+'''
+
 
 def create_identity_lambda(name, *argnames):
     source = _IDENTITY_LAMBDA_FORMAT.format(name=name, argnames=', '.join(argnames))
+    context = {}
+    exec(source, context)
+
+    fixture_func = context[name]
+    return fixture_func
+
+
+def create_destructured_parametrized_lambda(name: str, source_name: str, index: int):
+    source = _DESTRUCTURED_PARAMETRIZED_LAMBDA_FORMAT.format(
+        name=name, source_name=source_name, index=index
+    )
     context = {}
     exec(source, context)
 
@@ -28,13 +49,22 @@ class LambdaFixture(wrapt.ObjectProxy):
     __name__ = '<lambda-fixture>'
 
     bind: bool
+    is_async: bool
     fixture_kwargs: dict
     fixture_func: Callable
     has_fixture_func: bool
-    parent: Union[type, ModuleType]
+    parent: Optional[Union[type, ModuleType]]
+    _self_iter: Optional[Iterable]
+    _self_params_source: Optional['LambdaFixture']
 
     def __init__(
-        self, fixture_names_or_lambda, *, bind: bool = False, async_: bool, **fixture_kwargs
+        self,
+        fixture_names_or_lambda,
+        *,
+        bind: bool = False,
+        async_: bool = False,
+        _params_source: Optional['LambdaFixture'] = None,
+        **fixture_kwargs,
     ):
         self.bind = bind
         self.is_async = async_
@@ -42,6 +72,8 @@ class LambdaFixture(wrapt.ObjectProxy):
         self.fixture_func = self._not_implemented
         self.has_fixture_func = False
         self.parent = None
+        self._self_iter = None
+        self._self_params_source = _params_source
 
         #: pytest fixture info definition
         self._pytestfixturefunction = pytest.fixture(**fixture_kwargs)
@@ -51,16 +83,37 @@ class LambdaFixture(wrapt.ObjectProxy):
         self.__pytest_wrapped__ = _PytestWrapper(self)
 
         if fixture_names_or_lambda is not None:
+            supports_iter = (
+                not callable(fixture_names_or_lambda)
+                and not isinstance(fixture_names_or_lambda, str)
+                and isinstance(fixture_names_or_lambda, Iterable)
+            )
+            if supports_iter:
+                fixture_names_or_lambda = tuple(fixture_names_or_lambda)
+
             self.set_fixture_func(fixture_names_or_lambda)
+
+            if supports_iter:
+                self._self_iter = map(
+                    lambda name: LambdaFixture(name),
+                    fixture_names_or_lambda,
+                )
 
         elif fixture_kwargs.get('params'):
             # Shortcut to allow `lambda_fixture(params=[1,2,3])`
             self.set_fixture_func(lambda request: request.param)
 
+            params = fixture_kwargs['params'] = tuple(fixture_kwargs['params'])
+            self._self_iter = _LambdaFixtureParametrizedIterator(self, params)
+
     def __call__(self, *args, **kwargs):
         if self.bind:
             args = (self.parent,) + args
         return self.fixture_func(*args, **kwargs)
+
+    def __iter__(self):
+        if self._self_iter:
+            return iter(self._self_iter)
 
     def _not_implemented(self):
         raise NotImplementedError(
@@ -131,7 +184,10 @@ class LambdaFixture(wrapt.ObjectProxy):
             raise ValueError(f'bind=True cannot be used at the module level. '
                              f'Please remove this arg in the {name} fixture in {parent.__file__}')
 
-        if not self.has_fixture_func:
+        if self._self_params_source:
+            self.set_fixture_func(self._not_implemented)
+
+        elif not self.has_fixture_func:
             # If no fixture definition was passed to lambda_fixture, it's our
             # responsibility to define it as the name of the attribute. This is
             # handy if ya just wanna force a fixture to be used, e.g.:
@@ -213,3 +269,34 @@ class LambdaFixture(wrapt.ObjectProxy):
     def __pytest_wrapped__(self): return self._self___pytest_wrapped__
     @__pytest_wrapped__.setter
     def __pytest_wrapped__(self, value): self._self___pytest_wrapped__ = value
+
+
+class _LambdaFixtureParametrizedIterator:
+    def __init__(self, source: LambdaFixture, params: Iterable):
+        self.source = source
+        self.params = tuple(params)
+
+        self.num_params = self._get_param_set_length(self.params[0]) if self.params else 0
+        self.destructured: List[LambdaFixture] = []
+
+    def __iter__(self):
+        if self.destructured:
+            raise RuntimeError('Lambda fixtures may only be destructured once.')
+
+        for i in range(self.num_params):
+            child = LambdaFixture(None, _params_source=self.source)
+            self.destructured.append(child)
+            yield child
+
+    @property
+    def child_names(self) -> Tuple[str]:
+        return tuple(child.__name__ for child in self.destructured)
+
+    @staticmethod
+    def _get_param_set_length(param: Union[ParameterSet, Iterable, Any]) -> int:
+        if isinstance(param, ParameterSet):
+            return len(param.values)
+        elif isinstance(param, Sized) and not isinstance(param, (str, bytes)):
+            return len(param)
+        else:
+            return 1

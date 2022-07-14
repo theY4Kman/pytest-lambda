@@ -1,3 +1,5 @@
+import pytest
+
 from pytest_lambda import lambda_fixture, static_fixture
 
 
@@ -38,6 +40,35 @@ def it_processes_toplevel_tuple_lambda_fixture(abc):
     expected = ('a', 'b', 'c')
     actual = abc
     assert expected == actual
+
+
+x, y, z = lambda_fixture('a', 'b', 'c')
+
+
+def it_processes_toplevel_destructured_tuple_lambda_fixture(x, y, z):
+    expected = ('a', 'b', 'c')
+    actual = (x, y, z)
+    assert expected == actual
+
+
+pa, pb, pc, pd = lambda_fixture(params=[
+    pytest.param('alfalfa', 'better', 'dolt', 'gamer'),
+])
+
+
+def it_processes_toplevel_destructured_parametrized_lambda_fixture(pa, pb, pc, pd):
+    expected = ('alfalfa', 'better', 'dolt', 'gamer')
+    actual = (pa, pb, pc, pd)
+    assert expected == actual
+
+
+destructured_id = lambda_fixture(params=[
+    pytest.param('muffin', id='muffin'),
+])
+
+
+def it_uses_ids_from_destructured_parametrized_lambda_fixture(destructured_id, request):
+    assert destructured_id in request.node.callspec.id
 
 
 class TestClass:

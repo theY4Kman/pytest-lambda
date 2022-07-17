@@ -49,6 +49,7 @@ fixture_name = lambda_fixture(lambda: asyncio.sleep(0, 'expression'), async_=Tru
 # Request fixtures by name
 fixture_name = lambda_fixture('other_fixture')
 fixture_name = lambda_fixture('other_fixture', 'another_fixture', 'cant_believe_its_not_fixture')
+ren, ame, it = lambda_fixture('other_fixture', 'another_fixture', 'cant_believe_its_not_fixture')
 
 # Reference `self` inside a class
 class TestContext:
@@ -59,6 +60,8 @@ fixture_name = lambda_fixture(params=['a', 'b'])
 fixture_name = lambda_fixture(params=['a', 'b'], ids=['A!', 'B!'])
 fixture_name = lambda_fixture(params=[pytest.param('a', id='A!'),
                                       pytest.param('b', id='B!')])
+alpha, omega = lambda_fixture(params=[pytest.param('start', 'end', id='uno'),
+                                      pytest.param('born', 'dead', id='dos')])
 
 # Use literal value (not lazily evaluated)
 fixture_name = static_fixture(42)
@@ -125,6 +128,21 @@ def test_my_identity(who_i_am):
     assert who_i_am == ('Jason', 'Bourne')
 ```
 
+Destructuring assignment is also supported, allowing multiple fixtures to be renamed in one statement:
+```python
+# test_the_bourne_identity.py
+
+from pytest_lambda import lambda_fixture, static_fixture
+
+agent_first = static_fixture('Jason')
+agent_last = static_fixture('Bourne')
+first, last = lambda_fixture('agent_first', 'agent_last')
+
+def test_my_identity(first, last):
+    assert first == 'Jason'
+    assert last == 'Bourne'
+```
+
 
 #### Annotating aliased fixtures
 
@@ -144,6 +162,44 @@ preconditions = lambda_fixture('turn_the_key', autouse=True)
 
 def test_my_caddy(car):
     assert car['is_started']
+```
+
+
+### Parametrizing
+
+Tests can be parametrized with `lambda_fixture`'s `params` kwarg
+```python
+# test_number_5.py
+
+from pytest_lambda import lambda_fixture
+
+lady = lambda_fixture(params=[
+    'Monica', 'Erica', 'Rita', 'Tina', 'Sandra', 'Mary', 'Jessica'
+])
+
+def test_your_man(lady):
+    assert lady[:0] in 'my life'
+```
+
+Destructuring assignment of a parametrized lambda fixture is also supported
+```python
+# test_number_5.py
+
+import pytest
+from pytest_lambda import lambda_fixture
+
+lady, where = lambda_fixture(params=[
+    pytest.param('Monica', 'in my life'),
+    pytest.param('Erica', 'by my side'),
+    pytest.param('Rita', 'is all I need'),
+    pytest.param('Tina', 'is what I see'),
+    pytest.param('Sandra', 'in the sun'),
+    pytest.param('Mary', 'all night long'),
+    pytest.param('Jessica', 'here I am'),
+])
+
+def test_your_man(lady, where):
+    assert lady[:0] in where
 ```
 
 

@@ -20,6 +20,20 @@ class DescribeWrapFixture:
         actual = set(args) - {'request'}
         assert expected == actual
 
+    def it_orders_decorated_method_args_first(self):
+        def fixture(fixture_unique):
+            pass
+
+        @wrap_fixture(fixture)
+        def extended_fixture(extension_unique, wrapped):
+            pass
+
+        args = getfuncargnames(extended_fixture)
+
+        expected = ('extension_unique', 'fixture_unique', 'request')
+        actual = args
+        assert expected == actual
+
 
     def it_passes_wrapped_fixture_to_extension(self, request):
         class Called(AssertionError):

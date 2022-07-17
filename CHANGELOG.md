@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 ### Changed
+ - Preserve declared order of arguments with `wrap_fixture` (decorated method's first, then wrapped fixture's, then `request`)
  - DOC: add destructuring examples to README
 
 

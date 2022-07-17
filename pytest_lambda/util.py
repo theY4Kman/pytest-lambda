@@ -1,4 +1,5 @@
 import functools
+from contextlib import suppress
 from typing import Callable, Iterable, Union
 
 from _pytest.compat import getfuncargnames, get_real_func
@@ -61,17 +62,23 @@ def wrap_fixture(
     fixturefunc = get_real_func(fixturefunc)
 
     def decorator(fn: Callable):
-        decorated_arg_names = set(getfuncargnames(fn))
+        decorated_arg_names = list(getfuncargnames(fn))
         if wrapped_param not in decorated_arg_names:
             raise TypeError(
                 f'The decorated method must include an arg named {wrapped_param} '
                 f'as the wrapped fixture func.')
 
         # Don't include the wrapped param in the argspec we expose to pytest
-        decorated_arg_names -= {wrapped_param}
+        decorated_arg_names.remove(wrapped_param)
 
-        fixture_arg_names = set(getfuncargnames(fixturefunc)) - set(ignore)
-        all_arg_names = fixture_arg_names | decorated_arg_names | {'request'}
+        fixture_arg_names = list(getfuncargnames(fixturefunc))
+        for ignored in ignore:
+            with suppress(ValueError):
+                fixture_arg_names.remove(ignored)
+
+        # Remove duplicates while retaining order of args (decorated, then wrapped)
+        all_arg_names = [*decorated_arg_names, *fixture_arg_names, 'request']
+        all_arg_names = list(sorted(set(all_arg_names), key=all_arg_names.index))
 
         def extension_impl(**all_args):
             request = all_args['request']

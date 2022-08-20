@@ -116,7 +116,7 @@ def error_fixture(error_fn: Callable, **fixture_kwargs) -> LambdaFixture[NoRetur
     exec(source, ctx)
 
     raise_exception = ctx['raise_exception']
-    raise_exception.__module__ = error_fn.__module__
+    raise_exception.__module__ = getattr(error_fn, '__module__', raise_exception.__module__)
     return lambda_fixture(raise_exception, **fixture_kwargs)
 
 

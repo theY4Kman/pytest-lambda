@@ -1,5 +1,7 @@
 # pytest-lambda
 
+[![PyPI version](https://badge.fury.io/py/pytest-lambda.svg)](https://badge.fury.io/py/pytest-lambda)
+
 Define pytest fixtures with lambda functions.
 
 

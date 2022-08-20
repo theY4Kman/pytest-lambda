@@ -36,16 +36,19 @@ def lambda_fixture(
             updated_name = lambda_fixture(lambda vendor: vendor.name + ' updated')
 
 
-    :param fixture_name_or_lambda: Either the name of another fixture, or a
-        lambda function, which can request other fixtures with its params. If
-        None, this defaults to the name of the attribute containing the lambda_fixture.
+    :param fixture_name_or_lambda:
+        Either the name of another fixture, or a lambda function, which can request other fixtures
+        with its params. If None, this defaults to the name of the attribute containing the
+        lambda_fixture.
 
-    :param bind: Set this to true to pass self to your fixture. It must be the
-        first parameter in your fixture. This cannot be true if using a fixture
-        name.
+    :param bind:
+        Set this to True to pass self to your fixture. It must be the first parameter in your
+        fixture. This cannot be True if using a fixture name.
 
-    :param async_: If True, the lambda will be wrapped in an async function; if the
-        lambda evaluates to an awaitable value, it will be awaited.
+    :param async_:
+        If True, the lambda will be wrapped in an async function; if the lambda evaluates to an
+        awaitable value, it will be awaited. If False, the lambda's return value will be returned
+        verbatim, regardless of whether it's awaitable.
 
     :param scope:
     :param params:
@@ -95,8 +98,9 @@ def error_fixture(error_fn: Callable, **fixture_kwargs) -> LambdaFixture[NoRetur
             url = error_fixture(lambda request: Exception(
                 f'Please override the {request.fixturename} fixture!'))
 
-    :param error_fn: fixture method which returns an exception to raise. It may
-        request pytest fixtures in its arguments
+    :param error_fn:
+        Fixture method which returns an exception to raise. It may request pytest fixtures
+        in its arguments.
 
     """
     proto = tuple(inspect.signature(error_fn).parameters)

@@ -215,8 +215,7 @@ class LambdaFixture(Generic[VT], wrapt.ObjectProxy):
     # To address this, we override __class__ to return LambdaFixture when the
     # object proxy has not yet been initialized.
 
-    @property
-    def __class__(self):
+    def _get__class__(self):
         try:
             self.__wrapped__
         except ValueError:
@@ -224,9 +223,13 @@ class LambdaFixture(Generic[VT], wrapt.ObjectProxy):
         else:
             return self.__wrapped__.__class__
 
-    @__class__.setter
-    def __class__(self, val):
+    def _set__class__(self, val):
         self.__wrapped__.__class__ = val
+
+    # NOTE: @property is avoided on __class__, as it interfered with the PyCharm/pydev debugger
+    __class__ = property(_get__class__, _set__class__)  # type: ignore[assignment]
+    del _get__class__
+    del _set__class__
 
     # These properties are required in order to expose attributes stored on the
     # LambdaFixture proxying instance without prefixing them with _self_

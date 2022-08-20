@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
  - Add `py.typed` file to package to enable mypy static type checking
  - Expose minimal generic typing on `LambdaFixture`
 
+### Fixed
+ - Avoid crash when running under PyCharm/pydev debugger due to `LambdaFixture.__class__` property
+
 
 ## [2.1.0] — 2022-07-17
 ### Changed

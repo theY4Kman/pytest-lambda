@@ -15,7 +15,7 @@ homepage = 'https://github.com/theY4Kman/pytest-lambda'
 
 keywords = ['pytest']
 classifiers=[
-    'Development Status :: 3 - Alpha',
+    'Development Status :: 5 - Production/Stable',
     'Programming Language :: Python',
     'Framework :: Pytest',
     'License :: OSI Approved :: MIT License',

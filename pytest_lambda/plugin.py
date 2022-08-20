@@ -63,6 +63,9 @@ def pytest_generate_tests(metafunc: Metafunc) -> None:
         requested_fixturenames = set(metafunc.fixturenames)
 
         for param_source in param_sources:
+            if param_source.fixture_kwargs['params'] is None:
+                continue
+
             params_iter = param_source._self_iter
             assert isinstance(params_iter, _LambdaFixtureParametrizedIterator)
 

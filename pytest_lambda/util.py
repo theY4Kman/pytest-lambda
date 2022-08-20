@@ -28,7 +28,7 @@ def wrap_fixture(
     that can be called with no arguments — the fixtures it requested will
     receive automagical defaults, though these may be overridden. The argument
     name of this wrapped fixturefunc may be customized with the `wrapped_param`
-    arg, so as to avoid any collision with other fixture names.
+    arg, to avoid any collision with other fixture names.
 
     Example (contrived):
 

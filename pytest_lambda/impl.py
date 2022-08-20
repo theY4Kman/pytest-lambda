@@ -1,13 +1,16 @@
+from __future__ import annotations
+
 import functools
 import inspect
 from types import ModuleType
-from typing import Any, Callable, List, Optional, Tuple, Union
+from typing import Any, Generic, List, Optional, Tuple, TypeVar, Union, cast
 
 import pytest
-import wrapt
+import wrapt  # type: ignore[import]
 from _pytest.mark import ParameterSet
 
 from .compat import _PytestWrapper
+from .types import LambdaFixtureKwargs
 
 try:
     from collections.abc import Iterable, Sized
@@ -25,7 +28,7 @@ _DESTRUCTURED_PARAMETRIZED_LAMBDA_FORMAT = '''
 
 def create_identity_lambda(name, *argnames):
     source = _IDENTITY_LAMBDA_FORMAT.format(name=name, argnames=', '.join(argnames))
-    context = {}
+    context: dict[str, Any]  = {}
     exec(source, context)
 
     fixture_func = context[name]
@@ -36,26 +39,23 @@ def create_destructured_parametrized_lambda(name: str, source_name: str, index: 
     source = _DESTRUCTURED_PARAMETRIZED_LAMBDA_FORMAT.format(
         name=name, source_name=source_name, index=index
     )
-    context = {}
+    context: dict[str, Any] = {}
     exec(source, context)
 
     fixture_func = context[name]
     return fixture_func
 
 
-class LambdaFixture(wrapt.ObjectProxy):
+VT = TypeVar('VT')
+
+
+class LambdaFixture(Generic[VT], wrapt.ObjectProxy):
     # NOTE: pytest won't apply marks unless the markee has a __call__ and a
     #       __name__ defined.
     __name__ = '<lambda-fixture>'
 
-    bind: bool
-    is_async: bool
-    fixture_kwargs: dict
-    fixture_func: Callable
-    has_fixture_func: bool
-    parent: Optional[Union[type, ModuleType]]
-    _self_iter: Optional[Iterable]
-    _self_params_source: Optional['LambdaFixture']
+    _self_iter: Iterable | None
+    _self_params_source: LambdaFixture | None
 
     def __init__(
         self,
@@ -68,7 +68,7 @@ class LambdaFixture(wrapt.ObjectProxy):
     ):
         self.bind = bind
         self.is_async = async_
-        self.fixture_kwargs = fixture_kwargs
+        self.fixture_kwargs = cast(LambdaFixtureKwargs, fixture_kwargs)
         self.fixture_func = self._not_implemented
         self.has_fixture_func = False
         self.parent = None
@@ -106,7 +106,7 @@ class LambdaFixture(wrapt.ObjectProxy):
             params = fixture_kwargs['params'] = tuple(fixture_kwargs['params'])
             self._self_iter = _LambdaFixtureParametrizedIterator(self, params)
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args, **kwargs) -> VT:
         if self.bind:
             args = (self.parent,) + args
         return self.fixture_func(*args, **kwargs)
@@ -170,7 +170,7 @@ class LambdaFixture(wrapt.ObjectProxy):
             return create_identity_lambda(name, *fixture_names)
 
     def contribute_to_parent(self, parent: Union[type, ModuleType], name: str, **kwargs):
-        """Setup the LambdaFixture for the given class/module
+        """Set up the LambdaFixture for the given class/module
 
         This method is called during collection, when a LambdaFixture is
         encountered in a module or class. This method is responsible for saving
@@ -181,8 +181,9 @@ class LambdaFixture(wrapt.ObjectProxy):
         assert is_in_class or is_in_module
 
         if is_in_module and self.bind:
+            source_location = getattr(parent, '__file__', 'the parent')
             raise ValueError(f'bind=True cannot be used at the module level. '
-                             f'Please remove this arg in the {name} fixture in {parent.__file__}')
+                             f'Please remove this arg in the {name} fixture in {source_location}')
 
         if self._self_params_source:
             self.set_fixture_func(self._not_implemented)
@@ -231,44 +232,44 @@ class LambdaFixture(wrapt.ObjectProxy):
     # LambdaFixture proxying instance without prefixing them with _self_
 
     @property
-    def bind(self): return self._self_bind
+    def bind(self) -> bool: return self._self_bind
     @bind.setter
-    def bind(self, value): self._self_bind = value
+    def bind(self, value: bool) -> None: self._self_bind = value
 
     @property
-    def is_async(self): return self._self_is_async
+    def is_async(self) -> bool: return self._self_is_async
     @is_async.setter
-    def is_async(self, value): self._self_is_async = value
+    def is_async(self, value: bool) -> None: self._self_is_async = value
 
     @property
-    def fixture_kwargs(self): return self._self_fixture_kwargs
+    def fixture_kwargs(self) -> LambdaFixtureKwargs: return self._self_fixture_kwargs
     @fixture_kwargs.setter
-    def fixture_kwargs(self, value): self._self_fixture_kwargs = value
+    def fixture_kwargs(self, value) -> None: self._self_fixture_kwargs = value
 
     @property
     def fixture_func(self): return self._self_fixture_func
     @fixture_func.setter
-    def fixture_func(self, value): self._self_fixture_func = value
+    def fixture_func(self, value) -> None: self._self_fixture_func = value
 
     @property
-    def has_fixture_func(self): return self._self_has_fixture_func
+    def has_fixture_func(self) -> bool: return self._self_has_fixture_func
     @has_fixture_func.setter
-    def has_fixture_func(self, value): self._self_has_fixture_func = value
+    def has_fixture_func(self, value: bool) -> None: self._self_has_fixture_func = value
 
     @property
-    def parent(self): return self._self_parent
+    def parent(self) -> type | ModuleType | None: return self._self_parent
     @parent.setter
-    def parent(self, value): self._self_parent = value
+    def parent(self, value: type | ModuleType): self._self_parent = value
 
     @property
-    def _pytestfixturefunction(self): return self._self__pytestfixturefunction
+    def _pytestfixturefunction(self) -> bool: return self._self__pytestfixturefunction
     @_pytestfixturefunction.setter
-    def _pytestfixturefunction(self, value): self._self__pytestfixturefunction = value
+    def _pytestfixturefunction(self, value: bool) -> None: self._self__pytestfixturefunction = value
 
     @property
-    def __pytest_wrapped__(self): return self._self___pytest_wrapped__
+    def __pytest_wrapped__(self) -> _PytestWrapper: return self._self___pytest_wrapped__
     @__pytest_wrapped__.setter
-    def __pytest_wrapped__(self, value): self._self___pytest_wrapped__ = value
+    def __pytest_wrapped__(self, value: _PytestWrapper) -> None: self._self___pytest_wrapped__ = value
 
 
 class _LambdaFixtureParametrizedIterator:
@@ -289,7 +290,7 @@ class _LambdaFixtureParametrizedIterator:
             yield child
 
     @property
-    def child_names(self) -> Tuple[str]:
+    def child_names(self) -> Tuple[str, ...]:
         return tuple(child.__name__ for child in self.destructured)
 
     @staticmethod

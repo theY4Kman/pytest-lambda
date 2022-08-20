@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 
 ## [Unreleased]
+
+
+## [2.2.0] — 2022-08-20
 ### Added
  - Add `py.typed` file to package to enable mypy static type checking
  - Expose minimal generic typing on `LambdaFixture`

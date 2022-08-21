@@ -1,6 +1,6 @@
 [tool.poetry]
 name = 'pytest-lambda'
-version = "2.2.0"
+version = '2.2.0'
 description = 'Define pytest fixtures with lambda functions.'
 license = 'MIT'
 
@@ -34,14 +34,24 @@ wrapt = '^1.11.0'
 
 
 [tool.poetry.dev-dependencies]
-mypy = "^0.971"
-pytest-asyncio = "*"
-pytest-markdown = "*"
-tox = "^3.12"
+mypy = '^0.971'
+pytest-asyncio = '*'
+pytest-markdown = '*'
+pytest-mypy-plugins = '^1.10.0'
+tox = '^3.12'
 
 
-[tool.poetry.plugins."pytest11"]
-lambda = "pytest_lambda.plugin"
+[tool.poetry.plugins.pytest11]
+lambda = 'pytest_lambda.plugin'
+
+
+[tool.mypy]
+# Show the error codes for each issue (e.g. "valid-type" or "override")
+# These error codes may be ignored per-line with: # type: ignore[<code>, ...]
+show_error_codes = true
+
+# Load our mypy plugin
+plugins = ['pytest_lambda.ext.mypy']
 
 
 [build-system]

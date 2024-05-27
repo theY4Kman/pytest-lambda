@@ -319,4 +319,4 @@ How can I build and test the thing locally?
 1. Create a virtualenv, however you prefer. Or don't, if you prefer.
 2. `pip install poetry`
 3. `poetry install` to install setuptools entrypoint, so pytest automatically loads the plugin (otherwise, you'll have to run `py.test -p pytest_lambda.plugin`)
-4. Run `py.test`. The tests will be collected from the README.md (thanks to [pytest-markdown](https://github.com/Jc2k/pytest-markdown)).
+4. Run `py.test --markdown-docs`. The tests will be collected from the README.md (thanks to [pytest-markdown-docs](https://github.com/modal-labs/pytest-markdown-docs)).
